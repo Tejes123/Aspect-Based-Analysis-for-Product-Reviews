@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenAI-Powered Product Improvement Recommendation through Sentiment Analysis of Product Reviews</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+            
+        .masterContainer {
+            display: flex;
+            justify-content: center;
+            justify-content: space-between;
+            padding: 20px;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            background-color: rgb(255, 232, 175);
+        }
+        #chartContainer {
+            width: 400px;
+            height: 400px;
+            margin: 20px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .container {
+            margin: 20px auto;
+            width: 80%;
+            text-align: center;
+            background-color: rgb(227, 129, 189);
+            padding: 20px;
+            height: 100%;
+            border-radius:15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: left;
+            background-color: #b2eeff;
+            
+        }
+        th {
+            background-color: #f9ce23;
+        }
+        h2{
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Verdana, sans-serif;
+            text-align: center;  
+        }
+    </style>
+</head>
+<body background-image="{{ url_for('static', filename='background.jpeg') }}">
+    <h2>GenAI-Powered Product Improvement Recommendation through Sentiment Analysis of product reviews</h2>
+    <div class = "masterContainer">
+        
+    <div>
+        <h3 style = "text-align: center;">Propotion of Negatve, Positive and neutral reviews</h3>
+        <div id="chartContainer">
+            <canvas id="myPieChart"></canvas>
+        </div>
+        <button onclick="fetchValues()">Show Pie Chart</button> <!-- New button added here -->
+    </div>
+    <div class = "container">
+        <h3 style = "text-align: center;">Topic Wise Review Report</h3>
+        <table id = "response" class="responseBox">
+        <thead>
+            <tr>
+                <th>Topic</th>
+                <th>Problem</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table rows will be inserted here dynamically -->
+        </tbody>
+    </table>
+    <button onclick="fetchResponse()">Fetch Response</button> <!-- New button added here -->
+</div>
+</div>
+   
+
+    <script>
+        let myPieChart;
+
+        function createPieChart(dictData) {
+            const ctx = document.getElementById('myPieChart').getContext('2d');
+            if (myPieChart) {
+                myPieChart.destroy(); // Destroy previous chart instance if it exists
+            }
+            myPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Positive', 'Negative', 'Neutral'], // Adjust labels as necessary
+                    datasets: [{
+                        data: [dictData['positive'], dictData['negative'], dictData['neutral']],
+                        backgroundColor: ['#a5ff64', '#ef5f5f', '#f2fb75'], // Colors for each segment
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'My Pie Chart'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createTableFromJson(jsonData) {
+            console.log(jsonData);
+            const tableBody = document.querySelector("#response tbody");
+
+            // Loop through each key in the JSON object
+            for (const key in jsonData) {
+                if (jsonData.hasOwnProperty(key)) {
+                    // Create a new table row for each key-value pair
+                    const row = document.createElement("tr");
+
+                    // Create table cell for the key
+                    const keyCell = document.createElement("td");
+                    keyCell.textContent = key;
+                    row.appendChild(keyCell);
+
+                    // Create table cell for the value
+                    const valueCell = document.createElement("td");
+
+                    // Check if the value is an array
+                    if (Array.isArray(jsonData[key])) {
+                        valueCell.textContent = jsonData[key].join(", ");
+                    } else {
+                        valueCell.textContent = jsonData[key];
+                    }
+
+                    row.appendChild(valueCell);
+
+                    // Append the row to the table body
+                    tableBody.appendChild(row);
+                }
+            }
+        }
+        function populateTheData(data){
+            document.getElementById('response').innerText = data
+        }
+
+        function fetchValues() {
+            fetch('/get_values', {
+                method: 'GET', // Change to 'POST' if you want to send data
+            })
+            .then(response => response.json())
+            .then(data => {
+                createPieChart(data); // Update the pie chart with received data
+            })
+            .catch(error => {
+                console.error('Error fetching values:', error);
+            });
+        }
+
+        function fetchResponse(){
+            fetch('/get_response', {
+                method: 'GET', // Change to 'POST' if you want to send data
+            })
+            .then(response => response.json())
+            .then(data => {
+                createTableFromJson(data); // Update the pie chart with received data
+            })
+            .catch(error => {
+                console.error('Error fetching values:', error);
+            });
+
+        }
+    </script>
+</body>
+</html>
